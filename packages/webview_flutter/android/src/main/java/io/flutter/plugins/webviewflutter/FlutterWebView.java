@@ -109,6 +109,10 @@ public class FlutterWebView implements PlatformView, MethodCallHandler {
             params,
             new FlutterWebChromeClient(),
             flutterDownloadListener);
+
+    // Sets the text zoom of the page in percent.
+    webView.getSettings().setTextZoom(100);
+
     flutterDownloadListener.setWebView(webView);
 
     displayListenerProxy.onPostWebViewInitialization(displayManager);
