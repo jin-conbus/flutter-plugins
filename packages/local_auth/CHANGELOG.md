@@ -1,3 +1,23 @@
+## NEXT
+
+* Updated Android lint settings.
+
+## 1.1.7
+
+* Remove references to the Android V1 embedding.
+
+## 1.1.6
+
+* Migrate maven repository from jcenter to mavenCentral.
+
+## 1.1.5
+
+* Updated grammatical errors and inaccurate information in README.
+
+## 1.1.4
+
+* Add debug assertion that `localizedReason` in `LocalAuthentication.authenticateWithBiometrics`  must not be empty.
+
 ## 1.1.3
 
 * Fix crashes due to threading issues in iOS implementation.
