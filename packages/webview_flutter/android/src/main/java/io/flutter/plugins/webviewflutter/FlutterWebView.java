@@ -135,9 +135,6 @@ public class FlutterWebView implements PlatformView, MethodCallHandler {
       return false;
     }
     Uri result = null;
-    if (requestCode == REQUEST_CAMERA && resultCode == RESULT_OK) {
-      result = cameraUri;
-    }
     if (requestCode == FILE_CHOOSER_RESULT_CODE) {
       result = data == null || resultCode != RESULT_OK ? null : data.getData();
     }
