@@ -5,13 +5,20 @@
 package io.flutter.plugins.webviewflutter;
 
 import android.annotation.TargetApi;
+import android.app.Activity;
+import android.content.ClipData;
 import android.content.Context;
+import android.content.Intent;
 import android.hardware.display.DisplayManager;
+import android.net.Uri;
 import android.os.Build;
 import android.os.Handler;
 import android.os.Message;
+import android.provider.MediaStore;
+import android.util.Log;
 import android.view.View;
 import android.webkit.DownloadListener;
+import android.webkit.ValueCallback;
 import android.webkit.WebChromeClient;
 import android.webkit.WebResourceRequest;
 import android.webkit.WebStorage;
@@ -36,6 +43,15 @@ public class FlutterWebView implements PlatformView, MethodCallHandler {
   private final MethodChannel methodChannel;
   private final FlutterWebViewClient flutterWebViewClient;
   private final Handler platformThreadHandler;
+
+  ////////////////////////////////////////////////////////
+  // START : file chooser
+  private ValueCallback<Uri> uploadMessage;
+  private ValueCallback<Uri[]> uploadMessageAboveLollipop;
+  private final static int FILE_CHOOSER_RESULT_CODE = 10000;
+  public static final int RESULT_OK = -1;
+  // END : file chooser
+  ////////////////////////////////////////////////////////
 
   // Verifies that a url opened by `Window.open` has a secure url.
   private class FlutterWebChromeClient extends WebChromeClient {
@@ -82,6 +98,86 @@ public class FlutterWebView implements PlatformView, MethodCallHandler {
       flutterWebViewClient.onLoadingProgress(progress);
     }
   }
+
+  /////////////////////////////////////////////////////////
+  // START : File Chooser
+  // For Android >= 5.0
+  @Override
+  public boolean onShowFileChooser(WebView webView, ValueCallback<Uri[]> filePathCallback, WebChromeClient.FileChooserParams fileChooserParams) {
+    uploadMessageAboveLollipop = filePathCallback;
+    openGallery();
+    return true;
+  }
+
+  private void openGallery() {
+    if (WebViewFlutterPlugin.activity == null || !FileUtil.checkSDcard(WebViewFlutterPlugin.activity)) {
+      return;
+    }
+    openImageChooserActivity();
+  }
+
+  private void openImageChooserActivity() {
+    Intent intent1 = new Intent(Intent.ACTION_PICK, null);
+    intent1.setDataAndType(MediaStore.Images.Media.EXTERNAL_CONTENT_URI, "image/*");
+    Intent chooser = new Intent(Intent.ACTION_CHOOSER);
+    chooser.putExtra(Intent.EXTRA_TITLE, "이미지 선택");
+    chooser.putExtra(Intent.EXTRA_INTENT,intent1);
+
+    if (WebViewFlutterPlugin.activity != null){
+      WebViewFlutterPlugin.activity.startActivityForResult(chooser, FILE_CHOOSER_RESULT_CODE);
+    } else {
+      Log.v(TAG, "activity is null");
+    }
+  }
+
+  public boolean activityResult(int requestCode, int resultCode, Intent data) {
+    if (null == uploadMessage && null == uploadMessageAboveLollipop) {
+      return false;
+    }
+    Uri result = null;
+    if (requestCode == REQUEST_CAMERA && resultCode == RESULT_OK) {
+      result = cameraUri;
+    }
+    if (requestCode == FILE_CHOOSER_RESULT_CODE) {
+      result = data == null || resultCode != RESULT_OK ? null : data.getData();
+    }
+    if (uploadMessageAboveLollipop != null) {
+      onActivityResultAboveLollipop(requestCode, resultCode, data);
+    } else if (uploadMessage != null && result != null) {
+      uploadMessage.onReceiveValue(result);
+      uploadMessage = null;
+    }
+    return false;
+  }
+
+  @TargetApi(Build.VERSION_CODES.LOLLIPOP)
+  private void onActivityResultAboveLollipop(int requestCode, int resultCode, Intent intent) {
+    if (requestCode != FILE_CHOOSER_RESULT_CODE || uploadMessageAboveLollipop == null) {
+      return;
+    }
+    Uri[] results = null;
+    if (requestCode == FILE_CHOOSER_RESULT_CODE && resultCode == Activity.RESULT_OK) {
+      if (intent != null) {
+        String dataString = intent.getDataString();
+        ClipData clipData = intent.getClipData();
+        if (clipData != null) {
+          results = new Uri[clipData.getItemCount()];
+          for (int i = 0; i < clipData.getItemCount(); i++) {
+            ClipData.Item item = clipData.getItemAt(i);
+            results[i] = item.getUri();
+          }
+        }
+        if (dataString != null) {
+          results = new Uri[]{Uri.parse(dataString)};
+        }
+      }
+    }
+    uploadMessageAboveLollipop.onReceiveValue(results);
+    uploadMessageAboveLollipop = null;
+  }
+
+  // END : File Chooser
+  /////////////////////////////////////////////////////////
 
   @TargetApi(Build.VERSION_CODES.JELLY_BEAN_MR1)
   @SuppressWarnings("unchecked")
