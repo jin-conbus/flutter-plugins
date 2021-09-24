@@ -25,7 +25,7 @@ import io.flutter.plugin.common.PluginRegistry.Registrar;
  * <p>Call {@link #registerWith(Registrar)} to use the stable {@code io.flutter.plugin.common}
  * package instead.
  */
-public class WebViewFlutterPlugin implements FlutterPlugin, PluginRegistry.ActivityResultListener, PluginRegistry.RequestPermissionsResultListener, ActivityAware {
+public class WebViewFlutterPlugin implements FlutterPlugin, PluginRegistry.ActivityResultListener, ActivityAware {
 
   private FlutterCookieManager flutterCookieManager;
   public static Activity activity;
