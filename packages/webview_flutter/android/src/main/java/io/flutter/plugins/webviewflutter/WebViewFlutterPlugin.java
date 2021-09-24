@@ -4,6 +4,11 @@
 
 package io.flutter.plugins.webviewflutter;
 
+import android.app.Activity;
+import android.content.Context;
+import android.content.Intent;
+import android.util.Log;
+
 import io.flutter.embedding.engine.plugins.FlutterPlugin;
 import io.flutter.plugin.common.BinaryMessenger;
 
@@ -18,6 +23,8 @@ import io.flutter.plugin.common.BinaryMessenger;
 public class WebViewFlutterPlugin implements FlutterPlugin {
 
   private FlutterCookieManager flutterCookieManager;
+  public static Activity activity;
+  private FlutterWebViewFactory factory;
 
   /**
    * Add an instance of this to {@link io.flutter.embedding.engine.plugins.PluginRegistry} to
@@ -31,7 +38,8 @@ public class WebViewFlutterPlugin implements FlutterPlugin {
    * <p>Registration should eventually be handled automatically by v2 of the
    * GeneratedPluginRegistrant. https://github.com/flutter/flutter/issues/42694
    */
-  public WebViewFlutterPlugin() {}
+  public WebViewFlutterPlugin() {
+  }
 
   /**
    * Registers a plugin implementation that uses the stable {@code io.flutter.plugin.common}
@@ -53,12 +61,20 @@ public class WebViewFlutterPlugin implements FlutterPlugin {
   @Override
   public void onAttachedToEngine(FlutterPluginBinding binding) {
     BinaryMessenger messenger = binding.getBinaryMessenger();
+    factory = new FlutterWebViewFactory(messenger, null);
     binding
         .getPlatformViewRegistry()
         .registerViewFactory(
-            "plugins.flutter.io/webview",
-            new FlutterWebViewFactory(messenger, /*containerView=*/ null));
+            "plugins.flutter.io/webview", factory);
     flutterCookieManager = new FlutterCookieManager(messenger);
+
+    Context appContext = binding.getApplicationContext();
+    if (appContext instanceof FlutterApplication) {
+      Activity currentActivity = ((FlutterApplication) appContext).getCurrentActivity();
+      if (currentActivity != null) {
+        activity = currentActivity;
+      }
+    }
   }
 
   @Override
@@ -69,5 +85,43 @@ public class WebViewFlutterPlugin implements FlutterPlugin {
 
     flutterCookieManager.dispose();
     flutterCookieManager = null;
+    activity = null;
+  }
+
+  @Override
+  public boolean onActivityResult(int requestCode, int resultCode, Intent data) {
+    if (factory != null && factory.getFlutterWebView() != null) {
+      return factory.getFlutterWebView().activityResult(requestCode, resultCode, data);
+    }
+
+    return false;
+  }
+
+  @Override
+  public void onAttachedToActivity(ActivityPluginBinding binding) {
+    activity = binding.getActivity();
+    binding.addActivityResultListener(this);
+    binding.addRequestPermissionsResultListener(this);
+  }
+
+  @Override
+  public void onDetachedFromActivityForConfigChanges() {
+  }
+
+  @Override
+  public void onReattachedToActivityForConfigChanges(ActivityPluginBinding binding) {
+  }
+
+  @Override
+  public void onDetachedFromActivity() {
+  }
+
+  @Override
+  public boolean onRequestPermissionsResult(int requestCode, String[] permissions, int[] grantResults) {
+    if (factory != null && factory.getFlutterWebView() != null) {
+      return factory.getFlutterWebView().requestPermissionsResult(requestCode, permissions, grantResults);
+    }
+
+    return false;
   }
 }
