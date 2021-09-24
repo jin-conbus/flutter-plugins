@@ -120,13 +120,4 @@ public class WebViewFlutterPlugin implements FlutterPlugin, PluginRegistry.Activ
   @Override
   public void onDetachedFromActivity() {
   }
-
-  @Override
-  public boolean onRequestPermissionsResult(int requestCode, String[] permissions, int[] grantResults) {
-    if (factory != null && factory.getFlutterWebView() != null) {
-      return factory.getFlutterWebView().requestPermissionsResult(requestCode, permissions, grantResults);
-    }
-
-    return false;
-  }
 }
