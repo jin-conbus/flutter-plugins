@@ -106,7 +106,6 @@ public class WebViewFlutterPlugin implements FlutterPlugin, PluginRegistry.Activ
   public void onAttachedToActivity(ActivityPluginBinding binding) {
     activity = binding.getActivity();
     binding.addActivityResultListener(this);
-    binding.addRequestPermissionsResultListener(this);
   }
 
   @Override
