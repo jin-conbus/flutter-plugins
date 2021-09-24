@@ -35,6 +35,7 @@ import io.flutter.plugin.platform.PlatformView;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import util.FileUtil;
 
 public class FlutterWebView implements PlatformView, MethodCallHandler {
 
@@ -97,18 +98,22 @@ public class FlutterWebView implements PlatformView, MethodCallHandler {
     public void onProgressChanged(WebView view, int progress) {
       flutterWebViewClient.onLoadingProgress(progress);
     }
+
+    /////////////////////////////////////////////////////////
+    // START : File Chooser
+    // For Android >= 5.0
+    @Override
+    public boolean onShowFileChooser(WebView webView, ValueCallback<Uri[]> filePathCallback, WebChromeClient.FileChooserParams fileChooserParams) {
+      uploadMessageAboveLollipop = filePathCallback;
+      openGallery();
+      return true;
+    }
+    // END : File Chooser
+    /////////////////////////////////////////////////////////
   }
 
   /////////////////////////////////////////////////////////
   // START : File Chooser
-  // For Android >= 5.0
-  @Override
-  public boolean onShowFileChooser(WebView webView, ValueCallback<Uri[]> filePathCallback, WebChromeClient.FileChooserParams fileChooserParams) {
-    uploadMessageAboveLollipop = filePathCallback;
-    openGallery();
-    return true;
-  }
-
   private void openGallery() {
     if (WebViewFlutterPlugin.activity == null || !FileUtil.checkSDcard(WebViewFlutterPlugin.activity)) {
       return;
