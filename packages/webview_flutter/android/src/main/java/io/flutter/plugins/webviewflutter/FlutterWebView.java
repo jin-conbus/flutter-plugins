@@ -130,8 +130,6 @@ public class FlutterWebView implements PlatformView, MethodCallHandler {
 
     if (WebViewFlutterPlugin.activity != null){
       WebViewFlutterPlugin.activity.startActivityForResult(chooser, FILE_CHOOSER_RESULT_CODE);
-    } else {
-      Log.v(TAG, "activity is null");
     }
   }
 
